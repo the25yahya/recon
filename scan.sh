@@ -1,16 +1,26 @@
-#!/bin/bash 
-BOLD='\033[1m'
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-NC='\033[0m'
+subdomainizer(){
+    echo -e "${BOLD}${BLUE}running SubDomainizer${NC}"
+    (cd /home/kali/SubDomainizer && \
+        python3 SubDomainizer.py -u "https://$1" -o SubDomainizer.txt && \
+        cat SubDomainizer.txt >> /home/kali/reconFramework/"$2"/subdomains.txt)
+    
+    echo -e "${BOLD}${BLUE}running httprobe${NC}"
+    (cd /home/kali/SubDomainizer && \
+        cat SubDomainizer.txt | httprobe >> /home/kali/reconFramework/"$2"/actualSites.txt && \
+        rm SubDomainizer.txt)
+}
 
-domain=""
-directory=""
+subscraper(){
+  echo -e "${BOLD}{YELLOW}running subscraper${NC}"
+  (cd /home/kali/subscraper && \
+    python3 subscraper.py -d $1 -o subscraper.txt && \
+    cat subscraper.txt >> /home/kali/reconFramework/"$2"/subdomains.txt)
+  echo -e "${BOLD}${YELLOW}running httprobe${NC}"
+  (cd /home/kali/subscraper && \
+  cat subscraper.txt | httprobe >> /home/kali/reconFramework/"$2"/actualSites.txt && \
+  rm subscraper.txt)
 
-source ./scan.sh
-
+}
 cert_sh(){
     cert_sh_results=$(python3 recon.py "$1")
 
@@ -47,62 +57,3 @@ echo -e "${BOLD}${GREEN}appending actual sites to actualSites.txt${NC}"
 echo "$purify" | httprobe >> "$2/actualSites.txt"
 
 }
-
-while getopts ":d:czgs" opt; do
- case $opt in
-   d)
-     domain=$OPTARG
-     directory="${domain}_recon"
-    ;;
-   c)
-     cert_sh_flag=true
-    ;;
-   g)
-     gobuster_flag=true
-     ;;
-   z)
-     subdomainizer_flag=true
-     ;;
-   s)
-     subscraper_flag=true
-     ;;
-   ?)
-     echo "invalid option: -$OPTARG" >&2
-     exit 1
-     ;;
-   :)
-     echo "Option -$OPTARG requires an argument." >&2
-     exit 1
-     ;;
-  esac
-done
-
-if [ -z "$domain" ]; then
-   echo "you must specify a domain with the -d option"
-   exit 1
-fi
-
-mkdir -p "$directory"
-(  
-   cd "$directory" || exit
-   touch subdomains.txt
-   touch actualSites.txt
-)
-
-# Call functions based on flags
-if [ "$cert_sh_flag" = true ]; then
-  cert_sh "$domain" "$directory"
-fi
-
-
-if [ "$subdomainizer_flag" = true ]; then
-  subdomainizer "$domain" "$directory"
-fi
-
-if [ "$gobuster_flag" = true ]; then
-  gobuster "$domain" "$directory"
-fi
-
-if [ "$subscraper_flag" = true ]; then
-  subscraper "$domain" "$directory"
-fi
