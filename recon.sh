@@ -11,61 +11,28 @@ directory=""
 
 source ./scan.sh
 
-cert_sh(){
-    cert_sh_results=$(python3 recon.py "$1")
 
-    echo -e "${BOLD}${RED}GOT SUBDOMAINS FROM CRT.SH${NC}"
-    echo ""
-
-    echo -e "${BOLD}${RED}CERT.SH RESULTS:${NC}"
-    echo "$cert_sh_results"
-    echo ""
-
-    echo -e "${BOLD}${RED}adding subdomains to subdomains.txt${NC}"
-    echo "$cert_sh_results" >> "$2/subdomains.txt"
-
-    echo -e "${BOLD}${RED}using httprobe to hit real sites${NC}"
-    echo "$cert_sh_results" | httprobe >> "$2/actualSites.txt"
-
-    echo -e "${BOLD}${RED}Contents of subdomains.txt:${NC}"
-    cat "$2/subdomains.txt"
-    echo -e "${BOLD}${RED}Contents of actualSites.txt:${NC}"
-    cat "$2/actualSites.txt"
-}
-
-gobuster(){
-
-echo -e "${BOLD}${GREEN}running gobuster to brute force subdomains${NC}"
-gobuster_results=$(gobuster dns -d $1 -w /home/kali/n0kovo_subdomains/n0kovo_subdomains_medium.txt -t 50 --wildcard)
-
-echo -e "${BOLD}${GREEN}got gobuster results${NC}"
-purify=$(echo "$gobuster_results" | awk '{print $1}')
-echo -e "${BOLD}${GREEN}appending results to subdomains.txt${NC}"
-
-echo "$purify" >> "$2/subdomains.txt"
-echo -e "${BOLD}${GREEN}appending actual sites to actualSites.txt${NC}"
-echo "$purify" | httprobe >> "$2/actualSites.txt"
-
-}
-
-while getopts ":d:czgs" opt; do
+while getopts ":d:ljpcb" opt; do
  case $opt in
    d)
      domain=$OPTARG
      directory="${domain}_recon"
     ;;
-   c)
-     cert_sh_flag=true
+   l)
+     linked_discovery_flag=true
     ;;
-   g)
-     gobuster_flag=true
+   j)
+     js_discovery_flag=true
      ;;
-   z)
-     subdomainizer_flag=true
+   p)
+     spidering_flag=true
      ;;
-   s)
-     subscraper_flag=true
+   c)
+     scraping_flag=true
      ;;
+   b)
+    brute_forcing_flag=true
+    ;;
    ?)
      echo "invalid option: -$OPTARG" >&2
      exit 1
@@ -87,22 +54,34 @@ mkdir -p "$directory"
    cd "$directory" || exit
    touch subdomains.txt
    touch actualSites.txt
+   touch site_urls.txt
+   touch interesting.txt
 )
 
 # Call functions based on flags
-if [ "$cert_sh_flag" = true ]; then
-  cert_sh "$domain" "$directory"
+if [ "$linked_discovery_flag" = true ]; then
+  linked_discovery "$domain" "$directory"
 fi
 
 
-if [ "$subdomainizer_flag" = true ]; then
-  subdomainizer "$domain" "$directory"
+if [ "$js_discovery_flag" = true ]; then
+  js_discovery "$domain" "$directory"
 fi
 
-if [ "$gobuster_flag" = true ]; then
-  gobuster "$domain" "$directory"
+if [ "$scraping_flag" = true ]; then
+  scraping "$domain" "$directory"
 fi
 
-if [ "$subscraper_flag" = true ]; then
-  subscraper "$domain" "$directory"
+if [ "$spidering_flag" = true ]; then
+  spidering "$domain" "$directory"
 fi
+
+if [ "$brute_forcing_flag" = true ]; then
+  bruteForcing "$domain" "$directory"
+fi
+
+# Keywords to search for in actualSites.txt
+keywords="admin|administrator|internal|intranet|portal|dashboard|control|manage|management|secure|panel|root|super|system|config|api|app|apps|services|service|web|backend|frontend|database|db|search|gateway|proxy|cache|cdn|auth|login|register|signup|user|account|accounts|customer|client|partner|supplier|support|help|billing|pay|payment|finance|dev|development|test|testing|qa|stage|staging|prod|production|beta|alpha|devops|git|svn|repo|repos|ci|cd|jenkins|build|deploy"
+
+# Loop over actualSites.txt and find lines containing the keywords, add them to interesting.txt
+grep -E "$keywords" "$directory/actualSites.txt" >> "$directory/interesting.txt"
