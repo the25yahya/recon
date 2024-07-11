@@ -12,7 +12,7 @@ directory=""
 source ./scan.sh
 
 
-while getopts ":d:ljpcb" opt; do
+while getopts ":d:ljsb" opt; do
  case $opt in
    d)
      domain=$OPTARG
@@ -24,10 +24,7 @@ while getopts ":d:ljpcb" opt; do
    j)
      js_discovery_flag=true
      ;;
-   p)
-     spidering_flag=true
-     ;;
-   c)
+   s)
      scraping_flag=true
      ;;
    b)
@@ -72,16 +69,16 @@ if [ "$scraping_flag" = true ]; then
   scraping "$domain" "$directory"
 fi
 
-if [ "$spidering_flag" = true ]; then
-  spidering "$domain" "$directory"
-fi
-
 if [ "$brute_forcing_flag" = true ]; then
   bruteForcing "$domain" "$directory"
 fi
 
+
+
 # Keywords to search for in actualSites.txt
 keywords="admin|administrator|internal|intranet|portal|dashboard|control|manage|management|secure|panel|root|super|system|config|api|app|apps|services|service|web|backend|frontend|database|db|search|gateway|proxy|cache|cdn|auth|login|register|signup|user|account|accounts|customer|client|partner|supplier|support|help|billing|pay|payment|finance|dev|development|test|testing|qa|stage|staging|prod|production|beta|alpha|devops|git|svn|repo|repos|ci|cd|jenkins|build|deploy"
 
-# Loop over actualSites.txt and find lines containing the keywords, add them to interesting.txt
-grep -E "$keywords" "$directory/actualSites.txt" >> "$directory/interesting.txt"
+
+# sorting results to extract unique subdomains 
+sort "$directory"/actualSites.txt | uniq > "$directory"/unique_actual_sites.txt
+sort "$directory"/subdomains.txt | uniq > "$directory"/unique_actual_subdomains.txt
