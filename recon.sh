@@ -12,7 +12,7 @@ directory=""
 source ./scan.sh
 
 
-while getopts ":d:ljsb" opt; do
+while getopts ":d:ljs" opt; do
  case $opt in
    d)
      domain=$OPTARG
@@ -27,9 +27,6 @@ while getopts ":d:ljsb" opt; do
    s)
      scraping_flag=true
      ;;
-   b)
-    brute_forcing_flag=true
-    ;;
    ?)
      echo "invalid option: -$OPTARG" >&2
      exit 1
@@ -68,11 +65,6 @@ fi
 if [ "$scraping_flag" = true ]; then
   scraping "$domain" "$directory"
 fi
-
-if [ "$brute_forcing_flag" = true ]; then
-  bruteForcing "$domain" "$directory"
-fi
-
 
 
 # Keywords to search for in actualSites.txt

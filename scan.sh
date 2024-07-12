@@ -77,16 +77,3 @@ scraping(){
     cat sublister.txt | httprobe >> "${output_path}actualSites.txt" && rm sublister.txt
 }
 
-bruteForcing(){
-  echo -e "${BOLD}${GREEN}running gobuster to brute force subdomains${NC}"
-  gobuster dns -d $1 -w /home/kali/n0kovo_subdomains/n0kovo_subdomains_tiny.txt -t 50 --wildcard -o gobuster.txt
-  gobuster_results=$(cat gobuster.txt)
-
-  echo -e "${BOLD}${GREEN}got gobuster results${NC}"
-  purify=$(echo "$gobuster_results" | awk '{print $1}')
-  echo -e "${BOLD}${GREEN}appending results to subdomains.txt${NC}"
-  echo "$purify" >> "${output_path}subdomains.txt"
-
-  echo -e "${BOLD}${GREEN}appending actual sites to actualSites.txt${NC}"
-  echo "$purify" | httprobe >> "${output_path}actualSites.txt"
-}
