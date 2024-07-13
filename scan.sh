@@ -35,14 +35,10 @@ scraping(){
     echo -e "${BOLD}${RED}adding subdomains to subdomains.txt${NC}"
     echo "$cert_sh_results" >> "${output_path}subdomains.txt"
 
-    echo -e "${BOLD}${RED}Contents of subdomains.txt:${NC}"
-    cat "${output_path}subdomains.txt"
 
     echo -e "${BOLD}${RED}using httprobe to hit real sites${NC}"
     echo "$cert_sh_results" | httprobe >> "${output_path}actualSites.txt"
 
-    echo -e "${BOLD}${RED}Contents of actualSites.txt:${NC}"
-    cat "${output_path}actualSites.txt"
     echo ""
     echo ""
     echo -e "${BOLD}..."
